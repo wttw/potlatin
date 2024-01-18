@@ -13,6 +13,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const (
@@ -35,10 +36,10 @@ func main() {
 		}
 		log.Fatalln(err)
 	}
-	if len(flag.Args()) != 1 {
+	if len(flags.Args()) != 2 {
 		log.Fatalln("One .pot file required as a parameter")
 	}
-	filename := flag.Arg(0)
+	filename := flags.Arg(1)
 
 	in, err := os.Open(filename)
 	if err != nil {
@@ -95,6 +96,12 @@ func process(r io.Reader, w io.Writer, fn func(msgctx, msgid string) (string, er
 				_, _ = fmt.Fprintf(w, "%q\n", line)
 			}
 			continue
+		}
+		if !inmsgId {
+			if strings.HasPrefix(line, `"PO-Revision-Date:`) {
+				fmt.Fprintf(w, "\"PO-Revision-Date: %s\\n\"\n", time.Now().Format("2006-01-02 15:04-0700"))
+				continue
+			}
 		}
 		_, _ = fmt.Fprintf(w, "%s\n", line)
 		if strings.HasPrefix(line, "msgid ") {
